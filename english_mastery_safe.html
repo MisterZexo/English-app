@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>English Mastery App</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: radial-gradient(circle at top, #1b1b2f, #0c0c14 70%);
+    color: #fff;
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+  header { text-align: center; padding: 24px 14px 10px; }
+  header h1 {
+    font-size: 24px;
+    font-weight: 800;
+    background: linear-gradient(90deg, #7c5cff, #00d9c0);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: 0.3px;
+  }
+  header p { color: #7d7d92; font-size: 11.5px; margin-top: 5px; }
+
+  .tabs-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #0c0c14;
+    padding: 10px 10px 12px;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.35);
+  }
+  .tabs {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 9px 14px;
+    border: none;
+    border-radius: 20px;
+    background: #1c1c2e;
+    color: #8d8da3;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .tab-btn.active {
+    background: linear-gradient(90deg, #7c5cff, #00d9c0);
+    color: #0c0c14;
+    box-shadow: 0 4px 12px rgba(124,92,255,0.4);
+  }
+
+  .section { display: none; padding: 18px 16px; max-width: 480px; margin: 0 auto; }
+  .section.active { display: block; animation: fadeIn 0.25s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .card {
+    background: linear-gradient(160deg, #181828, #14141f);
+    border: 1px solid #25253a;
+    border-radius: 20px;
+    padding: 22px;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+
+  .word-title { font-size: 27px; font-weight: 800; color: #ffd966; line-height: 1.2; }
+  .pos-tag {
+    display: inline-block;
+    background: rgba(124,92,255,0.18);
+    color: #b9a4ff;
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 4px 11px;
+    border-radius: 20px;
+    margin-left: 8px;
+    vertical-align: middle;
+    border: 1px solid rgba(124,92,255,0.35);
+  }
+  .label {
+    color: #00d9c0;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    margin-top: 16px;
+    text-transform: uppercase;
+  }
+  .label:first-of-type { margin-top: 14px; }
+  .content { font-size: 14.5px; color: #d8d8e6; margin-top: 5px; line-height: 1.55; }
+
+  .btn {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(90deg, #7c5cff, #00d9c0);
+    color: #0c0c14;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    margin-top: 6px;
+    box-shadow: 0 6px 18px rgba(124,92,255,0.35);
+    transition: transform 0.15s ease;
+  }
+  .btn:active { transform: scale(0.97); }
+
+  .counter { text-align: center; font-size: 11px; color: #5e5e72; margin-top: 10px; }
+
+  .passage { font-size: 14px; line-height: 1.75; color: #d8d8e6; text-align: justify; }
+  .question { margin-top: 18px; font-size: 14px; font-weight: 700; color: #fff; }
+  .options { margin-top: 10px; }
+  .option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 11px 15px;
+    margin-bottom: 9px;
+    border-radius: 12px;
+    background: #1c1c2e;
+    color: #d8d8e6;
+    border: 1px solid #2a2a40;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.15s ease;
+  }
+  .option.correct { background: rgba(46,204,113,0.18); border-color: #2ecc71; color: #b9ffd1; }
+  .option.wrong { background: rgba(231,76,60,0.18); border-color: #e74c3c; color: #ffc2bd; }
+  .option.disabled { pointer-events: none; }
+
+  textarea {
+    width: 100%;
+    min-height: 140px;
+    border-radius: 14px;
+    border: 1px solid #2a2a40;
+    background: #0e0e18;
+    color: #fff;
+    padding: 14px;
+    font-size: 14px;
+    resize: vertical;
+  }
+  textarea:focus { outline: none; border-color: #7c5cff; }
+  .word-count { font-size: 12px; color: #7d7d92; margin-top: 8px; text-align: right; }
+  .tips-list { font-size: 13px; color: #c8c8d8; line-height: 1.8; margin-top: 10px; padding-left: 18px; }
+  .tips-list li { margin-bottom: 6px; }
+  .tips-list b { color: #00d9c0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>English Mastery</h1>
+  <p>Vocabulary • Idioms • Phrases • One Word • Trending • Comprehension • Precis</p>
+</header>
+
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="vocab">Vocabulary</button>
+    <button class="tab-btn" data-tab="idioms">Idioms</button>
+    <button class="tab-btn" data-tab="phrases">Phrases</button>
+    <button class="tab-btn" data-tab="ows">One Word</button>
+    <button class="tab-btn" data-tab="trending">Trending</button>
+    <button class="tab-btn" data-tab="comp">Comprehension</button>
+    <button class="tab-btn" data-tab="precis">Precis</button>
+  </div>
+</div>
+
+<!-- VOCABULARY -->
+<div class="section active" id="vocab">
+  <div class="card">
+    <div><span class="word-title" id="wordTitle">--</span><span class="pos-tag" id="wordPos">--</span></div>
+    <div class="label">Meaning</div><div class="content" id="wordMeaning">--</div>
+    <div class="label">Synonyms</div><div class="content" id="wordSynonyms">--</div>
+    <div class="label">Antonyms</div><div class="content" id="wordAntonyms">--</div>
+    <div class="label">Example</div><div class="content" id="wordExample">--</div>
+  </div>
+  <button class="btn" id="nextWordBtn">Next Word</button>
+  <div class="counter" id="wordCounter"></div>
+</div>
+
+<!-- IDIOMS -->
+<div class="section" id="idioms">
+  <div class="card">
+    <div class="word-title" id="idiomTitle" style="font-size:21px;">--</div>
+    <div class="label">Meaning</div><div class="content" id="idiomMeaning">--</div>
+    <div class="label">Example</div><div class="content" id="idiomExample">--</div>
+  </div>
+  <button class="btn" id="nextIdiomBtn">Next Idiom</button>
+  <div class="counter" id="idiomCounter"></div>
+</div>
+
+<!-- PHRASES -->
+<div class="section" id="phrases">
+  <div class="card">
+    <div class="word-title" id="phraseTitle" style="font-size:21px;">--</div>
+    <div class="label">Meaning</div><div class="content" id="phraseMeaning">--</div>
+    <div class="label">Example</div><div class="content" id="phraseExample">--</div>
+  </div>
+  <button class="btn" id="nextPhraseBtn">Next Phrase</button>
+  <div class="counter" id="phraseCounter"></div>
+</div>
+
+<!-- ONE WORD SUBSTITUTION -->
+<div class="section" id="ows">
+  <div class="card">
+    <div class="label">Phrase / Description</div>
+    <div class="content" id="owsPhrase" style="font-size:15.5px; color:#fff; margin-top:6px;">--</div>
+    <div class="label">One Word</div><div class="word-title" id="owsWord" style="font-size:24px;">--</div>
+    <div class="label">Example</div><div class="content" id="owsExample">--</div>
+  </div>
+  <button class="btn" id="nextOwsBtn">Next One</button>
+  <div class="counter" id="owsCounter"></div>
+</div>
+
+<!-- TRENDING WORDS -->
+<div class="section" id="trending">
+  <div class="card">
+    <div><span class="word-title" id="trendTitle">--</span><span class="pos-tag" id="trendTag">NEW</span></div>
+    <div class="label">Meaning</div><div class="content" id="trendMeaning">--</div>
+    <div class="label">Example</div><div class="content" id="trendExample">--</div>
+    <div class="label">Used In</div><div class="content" id="trendUsage">--</div>
+  </div>
+  <button class="btn" id="nextTrendBtn">Next Trending Word</button>
+  <div class="counter" id="trendCounter"></div>
+</div>
+
+<!-- COMPREHENSION -->
+<div class="section" id="comp">
+  <div class="card"><div class="passage" id="passageText">--</div></div>
+  <div class="card" id="questionsWrap"></div>
+  <button class="btn" id="newPassageBtn">New Passage</button>
+</div>
+
+<!-- PRECIS -->
+<div class="section" id="precis">
+  <div class="card">
+    <div class="label">Passage (read carefully)</div>
+    <div class="passage" id="precisPassage" style="margin-top:8px;">--</div>
+  </div>
+  <div class="card">
+    <div class="label">Your Precis (write in ~1/3 of original words)</div>
+    <textarea id="precisInput" placeholder="Apna precis yahan likho..." style="margin-top:8px;"></textarea>
+    <div class="word-count" id="precisWordCount">Words: 0 / Target: --</div>
+  </div>
+  <div class="card">
+    <div class="label">Precis Writing Tips</div>
+    <ul class="tips-list">
+      <li>Precis original passage ka <b>1/3 length</b> jitna hona chahiye.</li>
+      <li>Apne words mein likho, copy-paste mat karo.</li>
+      <li>Sirf main idea aur key points rakho, examples/details hatao.</li>
+      <li>Title zaroor do precis ke upar.</li>
+      <li>Third person, past/reported tense use karo.</li>
+      <li>Ek hi paragraph mein likho, points list mat banao.</li>
+    </ul>
+  </div>
+  <button class="btn" id="newPrecisBtn">New Passage</button>
+</div>
+
+<script>
+/* ---------------- TAB SWITCHING ---------------- */
+const tabBtns = document.querySelectorAll('.tab-btn');
+const sections = document.querySelectorAll('.section');
+tabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    tabBtns.forEach(b => b.classList.remove('active'));
+    sections.forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* Generic cycler factory for unlimited rotating content */
+function createCycler(dataList, renderFn, counterEl, label) {
+  let index = 0;
+  let round = 0;
+  let shuffled = shuffleArray(dataList);
+  return function next() {
+    if (index >= shuffled.length) {
+      shuffled = shuffleArray(dataList);
+      index = 0;
+      round++;
+    }
+    const item = shuffled[index];
+    renderFn(item);
+    counterEl.textContent = `${label} ${index + 1} of ${shuffled.length} (Round ${round + 1}) — unlimited, reshuffles every round!`;
+    index++;
+  };
+}
+
+/* ---------------- VOCABULARY DATA ---------------- */
+const vocabList = [
+  {word:"Ephemeral", pos:"adj.", meaning:"Lasting for a very short time.", syn:"transient, fleeting, momentary", ant:"permanent, eternal", example:"Fame in showbiz is often ephemeral."},
+  {word:"Ubiquitous", pos:"adj.", meaning:"Present, appearing, or found everywhere.", syn:"omnipresent, pervasive", ant:"rare, scarce", example:"Smartphones have become ubiquitous in modern life."},
+  {word:"Resilient", pos:"adj.", meaning:"Able to recover quickly from difficulties.", syn:"tough, adaptable, hardy", ant:"fragile, weak", example:"She remained resilient despite repeated failures."},
+  {word:"Meticulous", pos:"adj.", meaning:"Showing great attention to detail.", syn:"precise, thorough, careful", ant:"careless, sloppy", example:"The report was prepared with meticulous accuracy."},
+  {word:"Candid", pos:"adj.", meaning:"Truthful and straightforward.", syn:"frank, honest, open", ant:"deceptive, evasive", example:"He gave a candid opinion about the project."},
+  {word:"Pragmatic", pos:"adj.", meaning:"Dealing with things sensibly and realistically.", syn:"practical, realistic", ant:"idealistic, unrealistic", example:"We need a pragmatic approach to solve this issue."},
+  {word:"Ambiguous", pos:"adj.", meaning:"Open to more than one interpretation.", syn:"unclear, vague", ant:"clear, definite", example:"The contract's wording was ambiguous."},
+  {word:"Tenacious", pos:"adj.", meaning:"Holding firmly to a course of action.", syn:"persistent, determined", ant:"weak, irresolute", example:"Her tenacious attitude helped her succeed."},
+  {word:"Eloquent", pos:"adj.", meaning:"Fluent and persuasive in speaking.", syn:"articulate, expressive", ant:"inarticulate", example:"The speaker delivered an eloquent speech."},
+  {word:"Frugal", pos:"adj.", meaning:"Economical, sparing in spending.", syn:"thrifty, economical", ant:"wasteful, extravagant", example:"He lived a frugal lifestyle to save money."},
+  {word:"Obsolete", pos:"adj.", meaning:"No longer produced or used; out of date.", syn:"outdated, archaic", ant:"modern, current", example:"That technology is now obsolete."},
+  {word:"Lucid", pos:"adj.", meaning:"Clear and easy to understand.", syn:"clear, coherent", ant:"confusing, vague", example:"He gave a lucid explanation of the theory."},
+  {word:"Volatile", pos:"adj.", meaning:"Liable to change rapidly and unpredictably.", syn:"unstable, unpredictable", ant:"stable, steady", example:"The stock market has been volatile this week."},
+  {word:"Benevolent", pos:"adj.", meaning:"Kind and generous.", syn:"kind, charitable", ant:"malevolent, cruel", example:"The benevolent donor funded the entire school."},
+  {word:"Diligent", pos:"adj.", meaning:"Showing care and effort in work.", syn:"hardworking, industrious", ant:"lazy, careless", example:"She is a diligent student who never misses class."},
+  {word:"Skeptical", pos:"adj.", meaning:"Not easily convinced; having doubts.", syn:"doubtful, dubious", ant:"trusting, credulous", example:"He remained skeptical about the new policy."},
+  {word:"Indifferent", pos:"adj.", meaning:"Having no particular interest or sympathy.", syn:"unconcerned, apathetic", ant:"interested, concerned", example:"She seemed indifferent to the outcome."},
+  {word:"Pristine", pos:"adj.", meaning:"In its original, unspoiled condition.", syn:"immaculate, untouched", ant:"polluted, spoiled", example:"The lake water was pristine and clear."},
+  {word:"Arduous", pos:"adj.", meaning:"Involving strenuous effort; difficult.", syn:"tough, exhausting", ant:"easy, effortless", example:"Climbing the mountain was an arduous task."},
+  {word:"Concise", pos:"adj.", meaning:"Giving information clearly in few words.", syn:"brief, succinct", ant:"verbose, lengthy", example:"Keep your answers concise and to the point."},
+  {word:"Authentic", pos:"adj.", meaning:"Genuine, of undisputed origin.", syn:"genuine, real", ant:"fake, counterfeit", example:"This is an authentic piece of art."},
+  {word:"Coherent", pos:"adj.", meaning:"Logical and consistent.", syn:"logical, consistent", ant:"incoherent, disjointed", example:"He presented a coherent argument."},
+  {word:"Adversity", pos:"n.", meaning:"Difficulties or misfortune.", syn:"hardship, suffering", ant:"prosperity, fortune", example:"She overcame great adversity to succeed."},
+  {word:"Altruistic", pos:"adj.", meaning:"Showing selfless concern for others.", syn:"selfless, charitable", ant:"selfish, egotistic", example:"His altruistic nature made him donate generously."},
+  {word:"Pertinent", pos:"adj.", meaning:"Relevant to a particular matter.", syn:"relevant, applicable", ant:"irrelevant", example:"Please ask only pertinent questions."},
+  {word:"Sporadic", pos:"adj.", meaning:"Occurring at irregular intervals.", syn:"occasional, intermittent", ant:"constant, regular", example:"There were sporadic showers throughout the day."},
+  {word:"Vivid", pos:"adj.", meaning:"Producing powerful feelings or clear images.", syn:"clear, graphic", ant:"dull, vague", example:"She gave a vivid description of the accident."},
+  {word:"Empathy", pos:"n.", meaning:"Ability to understand others' feelings.", syn:"compassion, understanding", ant:"indifference", example:"A good leader shows empathy toward employees."},
+  {word:"Inevitable", pos:"adj.", meaning:"Certain to happen; unavoidable.", syn:"unavoidable, certain", ant:"avoidable, uncertain", example:"Change is inevitable in any organization."},
+  {word:"Profound", pos:"adj.", meaning:"Very great or intense; deep.", syn:"deep, intense", ant:"superficial, shallow", example:"The book had a profound impact on readers."},
+  {word:"Reluctant", pos:"adj.", meaning:"Unwilling and hesitant.", syn:"hesitant, unwilling", ant:"eager, willing", example:"He was reluctant to accept the offer."},
+  {word:"Subtle", pos:"adj.", meaning:"Not obvious; delicate.", syn:"delicate, faint", ant:"obvious, blatant", example:"There was a subtle change in his tone."},
+  {word:"Versatile", pos:"adj.", meaning:"Able to adapt to many functions.", syn:"adaptable, flexible", ant:"limited, inflexible", example:"She is a versatile actor who can play any role."},
+  {word:"Zealous", pos:"adj.", meaning:"Having great energy for a cause.", syn:"passionate, fervent", ant:"apathetic, indifferent", example:"He was zealous in promoting social causes."},
+  {word:"Naive", pos:"adj.", meaning:"Lacking experience or judgment.", syn:"innocent, gullible", ant:"experienced, worldly", example:"It was naive of him to trust a stranger so quickly."},
+  {word:"Plausible", pos:"adj.", meaning:"Seeming reasonable or probable.", syn:"believable, credible", ant:"implausible, unlikely", example:"Her explanation seemed plausible to the jury."},
+  {word:"Redundant", pos:"adj.", meaning:"Not or no longer needed; superfluous.", syn:"unnecessary, excessive", ant:"essential, needed", example:"That sentence is redundant; remove it."},
+  {word:"Frivolous", pos:"adj.", meaning:"Not having any serious purpose.", syn:"trivial, silly", ant:"serious, important", example:"They spent money on frivolous purchases."},
+  {word:"Gregarious", pos:"adj.", meaning:"Fond of company; sociable.", syn:"sociable, outgoing", ant:"introverted, reserved", example:"He is gregarious and loves meeting new people."},
+  {word:"Indispensable", pos:"adj.", meaning:"Absolutely necessary.", syn:"essential, vital", ant:"unnecessary, dispensable", example:"Water is indispensable for life."}
+];
+
+const showWord = createCycler(vocabList, (w) => {
+  document.getElementById('wordTitle').textContent = w.word;
+  document.getElementById('wordPos').textContent = w.pos;
+  document.getElementById('wordMeaning').textContent = w.meaning;
+  document.getElementById('wordSynonyms').textContent = w.syn;
+  document.getElementById('wordAntonyms').textContent = w.ant;
+  document.getElementById('wordExample').textContent = w.example;
+}, document.getElementById('wordCounter'), "Word");
+document.getElementById('nextWordBtn').addEventListener('click', showWord);
+showWord();
+
+/* ---------------- IDIOMS DATA ---------------- */
+const idiomList = [
+  {idiom:"Break the ice", meaning:"To initiate conversation in a social setting.", example:"He told a joke to break the ice at the meeting."},
+  {idiom:"Once in a blue moon", meaning:"Something that happens very rarely.", example:"We meet our cousins once in a blue moon."},
+  {idiom:"Bite the bullet", meaning:"To face a difficult situation with courage.", example:"She decided to bite the bullet and confront her boss."},
+  {idiom:"Hit the nail on the head", meaning:"To describe exactly what is causing a situation.", example:"You hit the nail on the head with that observation."},
+  {idiom:"Let the cat out of the bag", meaning:"To reveal a secret accidentally.", example:"He let the cat out of the bag about the surprise party."},
+  {idiom:"Burn the midnight oil", meaning:"To work late into the night.", example:"She burned the midnight oil to finish the project."},
+  {idiom:"A piece of cake", meaning:"Something very easy to do.", example:"The exam was a piece of cake for him."},
+  {idiom:"Under the weather", meaning:"Feeling slightly ill.", example:"I'm feeling a bit under the weather today."},
+  {idiom:"Cut corners", meaning:"To do something in the easiest or cheapest way, often poorly.", example:"They cut corners on safety to save money."},
+  {idiom:"Spill the beans", meaning:"To reveal secret information.", example:"Someone spilled the beans about the merger."},
+  {idiom:"On thin ice", meaning:"In a risky or precarious situation.", example:"After missing deadlines, he was on thin ice at work."},
+  {idiom:"Beat around the bush", meaning:"To avoid talking directly about something.", example:"Stop beating around the bush and tell me the truth."},
+  {idiom:"Costs an arm and a leg", meaning:"Very expensive.", example:"That designer bag costs an arm and a leg."},
+  {idiom:"Add fuel to the fire", meaning:"To make a bad situation worse.", example:"His comments only added fuel to the fire."},
+  {idiom:"Jump on the bandwagon", meaning:"To join others in doing something popular.", example:"Many companies jumped on the bandwagon of AI products."},
+  {idiom:"Pull someone's leg", meaning:"To joke or tease someone.", example:"Relax, I was just pulling your leg."},
+  {idiom:"See eye to eye", meaning:"To agree completely with someone.", example:"The two partners finally saw eye to eye on the budget."},
+  {idiom:"Throw in the towel", meaning:"To give up on something.", example:"After three failed attempts, she threw in the towel."},
+  {idiom:"Wrap your head around", meaning:"To understand a difficult concept.", example:"I can't wrap my head around this physics problem."},
+  {idiom:"Cross that bridge when we come to it", meaning:"Deal with a problem only when it actually arises.", example:"Let's not worry now, we'll cross that bridge when we come to it."},
+  {idiom:"Get out of hand", meaning:"To become difficult to control.", example:"The party got out of hand by midnight."},
+  {idiom:"In the same boat", meaning:"In the same difficult situation as someone else.", example:"We're all in the same boat with this deadline."},
+  {idiom:"Keep an eye on", meaning:"To watch carefully.", example:"Please keep an eye on the baby while I cook."},
+  {idiom:"Speak of the devil", meaning:"Said when a person you were just discussing appears.", example:"Speak of the devil, here comes Raj now."},
+  {idiom:"Hit the sack", meaning:"To go to bed.", example:"I'm exhausted, time to hit the sack."}
+];
+
+const showIdiom = createCycler(idiomList, (it) => {
+  document.getElementById('idiomTitle').textContent = it.idiom;
+  document.getElementById('idiomMeaning').textContent = it.meaning;
+  document.getElementById('idiomExample').textContent = it.example;
+}, document.getElementById('idiomCounter'), "Idiom");
+document.getElementById('nextIdiomBtn').addEventListener('click', showIdiom);
+showIdiom();
+
+/* ---------------- PHRASES DATA ---------------- */
+const phraseList = [
+  {phrase:"Look forward to", meaning:"To feel excited about something that will happen.", example:"I look forward to meeting you next week."},
+  {phrase:"Give up", meaning:"To stop trying or quit.", example:"Don't give up on your dreams."},
+  {phrase:"Carry out", meaning:"To perform or complete a task.", example:"The team carried out the experiment successfully."},
+  {phrase:"Come across", meaning:"To find unexpectedly.", example:"I came across an old photo while cleaning."},
+  {phrase:"Bring up", meaning:"To raise a topic, or to raise a child.", example:"She brought up an important point in the meeting."},
+  {phrase:"Put off", meaning:"To postpone or delay.", example:"They put off the meeting until next Monday."},
+  {phrase:"Take after", meaning:"To resemble a parent or relative.", example:"She takes after her mother in looks and nature."},
+  {phrase:"Get along with", meaning:"To have a good relationship with someone.", example:"He gets along with all his colleagues."},
+  {phrase:"Run out of", meaning:"To have no more of something left.", example:"We ran out of milk this morning."},
+  {phrase:"Look into", meaning:"To investigate or examine something.", example:"The police are looking into the matter."},
+  {phrase:"Set up", meaning:"To establish or arrange something.", example:"They set up a new business last year."},
+  {phrase:"Turn down", meaning:"To reject an offer or request.", example:"She turned down the job offer."},
+  {phrase:"Figure out", meaning:"To understand or solve something.", example:"I finally figured out the math problem."},
+  {phrase:"Hold on", meaning:"To wait for a moment.", example:"Hold on, I'll be right there."},
+  {phrase:"Go through", meaning:"To experience something difficult, or to review carefully.", example:"She went through a tough time last year."},
+  {phrase:"Pull off", meaning:"To successfully achieve something difficult.", example:"They pulled off an amazing presentation."},
+  {phrase:"Take over", meaning:"To assume control of something.", example:"He took over the company after his father retired."},
+  {phrase:"Stand for", meaning:"To represent or symbolize something.", example:"The dove stands for peace."},
+  {phrase:"Work out", meaning:"To exercise, or to resolve successfully.", example:"Things worked out well in the end."},
+  {phrase:"Pass away", meaning:"To die (polite way of saying it).", example:"Her grandfather passed away last year."},
+  {phrase:"Show up", meaning:"To arrive or appear at an event.", example:"He didn't show up for the meeting."},
+  {phrase:"Catch up on", meaning:"To get up to date with something.", example:"I need to catch up on my sleep this weekend."},
+  {phrase:"Break down", meaning:"To stop functioning, or to become very upset.", example:"The car broke down on the highway."}
+];
+
+const showPhrase = createCycler(phraseList, (it) => {
+  document.getElementById('phraseTitle').textContent = it.phrase;
+  document.getElementById('phraseMeaning').textContent = it.meaning;
+  document.getElementById('phraseExample').textContent = it.example;
+}, document.getElementById('phraseCounter'), "Phrase");
+document.getElementById('nextPhraseBtn').addEventListener('click', showPhrase);
+showPhrase();
+
+/* ---------------- ONE WORD SUBSTITUTION DATA ---------------- */
+const owsList = [
+  {phrase:"A person who loves books", word:"Bibliophile", example:"Being a bibliophile, he spends hours in the library."},
+  {phrase:"One who is new to a field or activity", word:"Novice", example:"As a novice, she made a few mistakes at first."},
+  {phrase:"A place where birds are kept", word:"Aviary", example:"The zoo's aviary houses over 200 species of birds."},
+  {phrase:"A person who can speak two languages", word:"Bilingual", example:"Being bilingual helped him get the translator job."},
+  {phrase:"One who studies the stars and planets", word:"Astronomer", example:"The astronomer discovered a new comet."},
+  {phrase:"A handwriting that cannot be read", word:"Illegible", example:"His illegible notes confused the students."},
+  {phrase:"A person who walks on foot", word:"Pedestrian", example:"Pedestrians must use the designated crossing."},
+  {phrase:"One who does not believe in God", word:"Atheist", example:"He openly identifies as an atheist."},
+  {phrase:"A government by the people", word:"Democracy", example:"India is the largest democracy in the world."},
+  {phrase:"A person who eats too much", word:"Glutton", example:"He ate like a glutton at the buffet."},
+  {phrase:"One who is easily deceived", word:"Gullible", example:"Gullible investors fell for the scam."},
+  {phrase:"A list of books referred to in a study", word:"Bibliography", example:"The thesis included a detailed bibliography."},
+  {phrase:"A word that sounds the same but has different meaning", word:"Homophone", example:"'Flower' and 'flour' are homophones."},
+  {phrase:"One who can use both hands equally well", word:"Ambidextrous", example:"Being ambidextrous, he writes with both hands."},
+  {phrase:"A person who studies past events", word:"Historian", example:"The historian wrote a book about ancient civilizations."},
+  {phrase:"One who is incapable of being defeated", word:"Invincible", example:"The champion seemed invincible in the ring."},
+  {phrase:"A government by a single ruler with absolute power", word:"Autocracy", example:"The nation was once ruled under an autocracy."},
+  {phrase:"A person who repairs watches", word:"Watchmaker", example:"The watchmaker fixed the old clock perfectly."},
+  {phrase:"That which cannot be imitated", word:"Inimitable", example:"Her inimitable style made her instantly recognizable."},
+  {phrase:"One who hates mankind", word:"Misanthrope", example:"The misanthrope preferred solitude over company."},
+  {phrase:"A place where money is coined", word:"Mint", example:"The government mint produces all the country's coins."},
+  {phrase:"One who loves his country", word:"Patriot", example:"The patriot fought for his nation's freedom."},
+  {phrase:"A speech delivered without preparation", word:"Impromptu", example:"He gave an impromptu speech at the farewell party."},
+  {phrase:"That which can be easily broken", word:"Fragile", example:"Handle the fragile vase with care."}
+];
+
+const showOws = createCycler(owsList, (it) => {
+  document.getElementById('owsPhrase').textContent = it.phrase;
+  document.getElementById('owsWord').textContent = it.word;
+  document.getElementById('owsExample').textContent = it.example;
+}, document.getElementById('owsCounter'), "Item");
+document.getElementById('nextOwsBtn').addEventListener('click', showOws);
+showOws();
+
+/* ---------------- TRENDING / NEW WORDS DATA ---------------- */
+const trendingList = [
+  {word:"Doomscrolling", meaning:"Continuously scrolling through negative news on social media despite it causing distress.", example:"I caught myself doomscrolling at 2 AM again.", usage:"Social media, mental health discussions"},
+  {word:"Brain rot", meaning:"Mental fatigue or decline caused by consuming excessive trivial/low-quality online content.", example:"Watching mindless short videos all day is giving me brain rot.", usage:"Gen-Z internet slang"},
+  {word:"Rizz", meaning:"Charisma or skill in flirting/attracting romantic interest.", example:"He's got serious rizz, everyone likes him instantly.", usage:"Youth slang, social media"},
+  {word:"Delulu", meaning:"Short for 'delusional', describing unrealistic optimism or denial about a situation.", example:"She thinks her crush will text first — totally delulu.", usage:"Gen-Z slang"},
+  {word:"Gaslighting", meaning:"Manipulating someone into doubting their own perception or memory.", example:"He kept gaslighting her about what really happened that night.", usage:"Psychology, relationships, news"},
+  {word:"Quiet quitting", meaning:"Doing only the minimum required at work without going above and beyond.", example:"After burnout, he started quiet quitting his job.", usage:"Workplace culture discussions"},
+  {word:"FOMO", meaning:"Fear Of Missing Out — anxiety about missing an enjoyable experience others are having.", example:"She booked the trip last minute due to FOMO.", usage:"Everyday conversation, marketing"},
+  {word:"Cancel culture", meaning:"The practice of withdrawing support from public figures after objectionable actions/statements.", example:"The actor faced cancel culture after his old tweets resurfaced.", usage:"Social media, pop culture"},
+  {word:"Glow up", meaning:"A significant positive transformation in appearance or confidence.", example:"She had a major glow up after the new year.", usage:"Social media, lifestyle"},
+  {word:"Touch grass", meaning:"A phrase telling someone to go outside and reconnect with reality (often after online arguments).", example:"Bro needs to touch grass after that rant online.", usage:"Internet slang"},
+  {word:"Main character energy", meaning:"Acting confidently as if one is the protagonist of their own life story.", example:"She walked in with total main character energy.", usage:"Social media, self-confidence trend"},
+  {word:"Soft launch", meaning:"Subtly hinting at a new relationship on social media without fully confirming it.", example:"They soft launched their relationship with a blurry photo.", usage:"Social media, relationships"},
+  {word:"Hard launch", meaning:"Publicly and clearly announcing a relationship on social media.", example:"After months of hints, they finally hard launched as a couple.", usage:"Social media, relationships"},
+  {word:"Sus", meaning:"Short for 'suspicious'; something or someone seems untrustworthy.", example:"That message he sent was kinda sus.", usage:"Gaming, internet slang (from Among Us)"},
+  {word:"Girl math", meaning:"Humorous, illogical reasoning used to justify spending decisions.", example:"It was on sale, so technically I saved money — girl math.", usage:"Social media trend"},
+  {word:"Hustle culture", meaning:"A mindset that glorifies constant, relentless work as essential for success.", example:"Hustle culture often leads to burnout among young professionals.", usage:"Workplace and lifestyle discussions"},
+  {word:"AI hallucination", meaning:"When an AI model generates confident but factually incorrect information.", example:"The chatbot gave an AI hallucination about a historical event.", usage:"Tech and AI discussions"},
+  {word:"Digital detox", meaning:"A period of deliberately avoiding digital devices to reduce stress.", example:"He went on a digital detox over the weekend.", usage:"Wellness, lifestyle"},
+  {word:"Microaggression", meaning:"A subtle, often unintentional, discriminatory comment or action.", example:"The comment was a microaggression that hurt his colleague.", usage:"Social issues, workplace discussions"},
+  {word:"Imposter syndrome", meaning:"Persistent self-doubt about one's abilities despite evident success.", example:"Even after the promotion, she struggled with imposter syndrome.", usage:"Workplace, psychology"}
+];
+
+const showTrend = createCycler(trendingList, (it) => {
+  document.getElementById('trendTitle').textContent = it.word;
+  document.getElementById('trendMeaning').textContent = it.meaning;
+  document.getElementById('trendExample').textContent = it.example;
+  document.getElementById('trendUsage').textContent = it.usage;
+}, document.getElementById('trendCounter'), "Word");
+document.getElementById('nextTrendBtn').addEventListener('click', showTrend);
+showTrend();
+
+/* ---------------- COMPREHENSION DATA ---------------- */
+const passages = [
+  {
+    text: "The rapid growth of artificial intelligence has transformed industries across the globe. From healthcare to finance, AI systems now assist humans in making faster and more accurate decisions. However, this progress also raises concerns about job displacement and ethical use of data. Experts argue that while automation increases efficiency, it must be balanced with proper regulation to protect workers and ensure fairness. As AI continues to evolve, society must adapt its education and policy frameworks to keep pace with this technological revolution.",
+    questions: [
+      { q: "What is the main concern mentioned about AI growth?", options: ["Job displacement and ethics", "Lack of computing power", "High cost of AI tools", "Slow internet speed"], correct: 0 },
+      { q: "According to the passage, what must balance automation?", options: ["More factories", "Proper regulation", "Faster computers", "Cheaper labor"], correct: 1 },
+      { q: "What must society adapt according to the passage?", options: ["Sports policies", "Education and policy frameworks", "Tourism industry", "Agriculture methods"], correct: 1 }
+    ]
+  },
+  {
+    text: "Climate change remains one of the most pressing challenges of our time. Rising global temperatures have led to melting glaciers, rising sea levels, and unpredictable weather patterns. Scientists warn that without immediate action, many coastal cities could face severe flooding within decades. Governments worldwide are now investing in renewable energy sources such as solar and wind power to reduce carbon emissions. Individual actions, such as reducing waste and conserving energy, also play a crucial role in combating this global crisis.",
+    questions: [
+      { q: "What is one effect of rising global temperatures mentioned?", options: ["Increased rainfall only", "Melting glaciers", "More forests", "Stronger economy"], correct: 1 },
+      { q: "What are governments investing in to reduce emissions?", options: ["Coal mining", "Renewable energy", "Plastic production", "Deforestation"], correct: 1 },
+      { q: "What role do individual actions play according to the passage?", options: ["No role at all", "A crucial role", "Only a minor role", "A negative role"], correct: 1 }
+    ]
+  },
+  {
+    text: "Reading habits have changed dramatically with the rise of digital media. While traditional books remain popular among certain age groups, e-books and audiobooks have gained massive popularity due to their convenience. Studies show that reading, in any format, improves vocabulary, concentration, and empathy. Educators encourage students to read regularly, regardless of the medium, as it strengthens critical thinking skills. Despite the digital shift, libraries continue to play an essential role in promoting literacy within communities.",
+    questions: [
+      { q: "Why have e-books and audiobooks gained popularity?", options: ["They are free", "Their convenience", "They are mandatory in schools", "They are shorter"], correct: 1 },
+      { q: "What does reading improve according to the passage?", options: ["Only vocabulary", "Vocabulary, concentration, and empathy", "Only handwriting", "Only memory"], correct: 1 },
+      { q: "What do libraries continue to promote?", options: ["Literacy", "Tourism", "Sports", "Trade"], correct: 0 }
+    ]
+  }
+];
+
+let currentPassageIndex = 0;
+
+function loadPassage() {
+  const p = passages[currentPassageIndex];
+  document.getElementById('passageText').textContent = p.text;
+  const wrap = document.getElementById('questionsWrap');
+  wrap.innerHTML = "";
+
+  p.questions.forEach((qObj, qIndex) => {
+    const qDiv = document.createElement('div');
+    qDiv.innerHTML = `<div class="question">Q${qIndex+1}. ${qObj.q}</div>`;
+    const optDiv = document.createElement('div');
+    optDiv.className = 'options';
+
+    qObj.options.forEach((optText, optIndex) => {
+      const optBtn = document.createElement('button');
+      optBtn.className = 'option';
+      optBtn.textContent = optText;
+      optBtn.addEventListener('click', () => {
+        const allOpts = optDiv.querySelectorAll('.option');
+        allOpts.forEach(o => o.classList.add('disabled'));
+        if (optIndex === qObj.correct) {
+          optBtn.classList.add('correct');
+        } else {
+          optBtn.classList.add('wrong');
+          allOpts[qObj.correct].classList.add('correct');
+        }
+      });
+      optDiv.appendChild(optBtn);
+    });
+    qDiv.appendChild(optDiv);
+    wrap.appendChild(qDiv);
+  });
+
+  currentPassageIndex = (currentPassageIndex + 1) % passages.length;
+}
+document.getElementById('newPassageBtn').addEventListener('click', loadPassage);
+loadPassage();
+
+/* ---------------- PRECIS DATA ---------------- */
+const precisPassages = [
+  "Education is the most powerful tool for transforming society. It not only imparts knowledge but also shapes character, builds confidence, and fosters critical thinking. In many developing nations, access to quality education remains uneven, with rural areas lacking proper infrastructure and trained teachers. Governments and non-profit organizations have launched various initiatives to bridge this gap, including scholarship programs, mobile schools, and digital learning platforms. Despite these efforts, challenges such as poverty, child labor, and gender inequality continue to hinder progress. Experts believe that sustained investment in teacher training and infrastructure, combined with community involvement, can significantly improve educational outcomes over the next decade.",
+  "The concept of work-life balance has gained significant attention in recent years as employees increasingly prioritize mental health alongside career growth. Long working hours, constant connectivity through smartphones, and high-pressure environments have contributed to rising stress levels among professionals. Companies are now adopting flexible work policies, remote work options, and wellness programs to address these concerns. Research indicates that employees with better work-life balance tend to be more productive, creative, and loyal to their organizations. However, achieving this balance requires effort from both employers and employees, as well as a cultural shift away from glorifying overwork as a measure of success.",
+  "Urbanization has reshaped the global landscape, with more than half of the world's population now living in cities. This rapid shift has brought economic opportunities, improved infrastructure, and access to better healthcare and education. However, it has also led to challenges such as overcrowding, pollution, traffic congestion, and inadequate housing for low-income groups. City planners are increasingly focusing on sustainable urban development, incorporating green spaces, efficient public transportation, and smart technology to manage resources better. Successful urban planning requires collaboration between governments, private sectors, and citizens to ensure that growth benefits all sections of society equally."
+];
+
+let precisIndex = 0;
+
+function loadPrecis() {
+  const passage = precisPassages[precisIndex];
+  document.getElementById('precisPassage').textContent = passage;
+  const wordCount = passage.trim().split(/\s+/).length;
+  const target = Math.round(wordCount / 3);
+  document.getElementById('precisWordCount').textContent = `Words: 0 / Target: ~${target}`;
+  document.getElementById('precisInput').value = "";
+  document.getElementById('precisInput').dataset.target = target;
+  precisIndex = (precisIndex + 1) % precisPassages.length;
+}
+
+document.getElementById('precisInput').addEventListener('input', (e) => {
+  const text = e.target.value.trim();
+  const count = text.length === 0 ? 0 : text.split(/\s+/).length;
+  const target = e.target.dataset.target;
+  document.getElementById('precisWordCount').textContent = `Words: ${count} / Target: ~${target}`;
+});
+
+document.getElementById('newPrecisBtn').addEventListener('click', loadPrecis);
+loadPrecis();
+</script>
+
+</body>
+</html>
